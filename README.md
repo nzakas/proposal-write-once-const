@@ -1,5 +1,7 @@
 # Write-Once `const` Declarations
 
+Author: Nicholas C. Zakas
+
 This proposal seeks to allow `const` declarations to be uninitialized and later written to just once.
 
 You can browse the [ecmarkup output](https://nzakas.github.io/proposal-write-once-const/)
