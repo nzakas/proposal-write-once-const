@@ -1,44 +1,110 @@
-# template-for-proposals
+# Write-Once `const` Declarations
 
-A repository template for ECMAScript proposals.
+This proposal seeks to allow `const` declarations to be uninitialized and later written to just once.
 
-## Before creating a proposal
+You can browse the [ecmarkup output](https://nzakas.github.io/proposal-write-once-const/)
+or browse the [source](https://github.com/nzakas/proposal-write-once-const/blob/HEAD/spec.emu).
 
-Please ensure the following:
-  1. You have read the [process document](https://tc39.github.io/process-document/)
-  1. You have reviewed the [existing proposals](https://github.com/tc39/proposals/)
-  1. You are aware that your proposal requires being a member of TC39, or locating a TC39 delegate to “champion” your proposal
+## Motivation
 
-## Create your proposal repo
+In certain situations, a constant binding's value may not be calculable at the time of declaration, leaving developers to use `let` even though the binding's value will never change once set. Using `let` on bindings that should be immutable can lead to errors. This often happens when the value of a binding needs more than two conditions to be evaluated in order to determine the correct value to use. For example:
 
-Follow these steps:
-  1. Click the green [“use this template”](https://github.com/tc39/template-for-proposals/generate) button in the repo header. (Note: Do not fork this repo in GitHub's web interface, as that will later prevent transfer into the TC39 organization)
-  1. Update ecmarkup and the biblio to the latest version: `npm install --save-dev ecmarkup@latest && npm install --save-dev --save-exact @tc39/ecma262-biblio@latest`.
-  1. Go to your repo settings page:
-      1. Under “General”, under “Features”, ensure “Issues” is checked, and disable “Wiki”, and “Projects” (unless you intend to use Projects)
-      1. Under “Pull Requests”, check “Always suggest updating pull request branches” and “automatically delete head branches”
-      1. Under the “Pages” section on the left sidebar, and set the source to “deploy from a branch” and check “Enforce HTTPS”
-      1. Under the “Actions” section on the left sidebar, under “General”, select “Read and write permissions” under “Workflow permissions” and click “Save”
-  1. [“How to write a good explainer”][explainer] explains how to make a good first impression.
+```js
+let value;
 
-      > Each TC39 proposal should have a `README.md` file which explains the purpose
-      > of the proposal and its shape at a high level.
-      >
-      > ...
-      >
-      > The rest of this page can be used as a template ...
+if (someCondition) {
+  value = 1;
+} else if (someOtherCondition) {
+  value = 2;
+} else {
+  value = 3;
+}
+```
 
-      Your explainer can point readers to the `index.html` generated from `spec.emu`
-      via markdown like
+## Proposal
 
-      ```markdown
-      You can browse the [ecmarkup output](https://ACCOUNT.github.io/PROJECT/)
-      or browse the [source](https://github.com/ACCOUNT/PROJECT/blob/HEAD/spec.emu).
-      ```
+We propose that `const` declarations no longer require initialization. Specifically:
 
-      where *ACCOUNT* and *PROJECT* are the first two path elements in your project's Github URL.
-      For example, for github.com/**tc39**/**template-for-proposals**, *ACCOUNT* is “tc39”
-      and *PROJECT* is “template-for-proposals”.
+1. An uninitialized `const` declaration is no longer a syntax error.
+1. Attempting to read an uninitialized `const` binding before its value is set causes `ReferenceError: Cannot access 'name' before initialization.`. (Differs from `let`, which allows you to check the value before initialization.)
+1. An uninitialized `const` binding may have its value set exactly once.
+1. Attempting to set the value of an uninitialized `const` binding more than once causes the same `TypeError: Assignment to constant variable.` as assigning to any other `const` binding.
+
+For example:
+
+```js
+const value;
+
+if (someCondition) {
+  value = 1;
+} else if (someOtherCondition) {
+  value = 2;
+} else {
+  value = 3;
+}
+
+value = 4;    // TypeError: Assignment to constant variable.
+
+const value2;
+console.log(value2);  // ReferenceError: Cannot access 'value2' before initialization.
+```
+
+## Other Languages
+
+Other languages supporting write-once immutable bindings typically have the following behavior:
+
+1. The binding cannot be read until a value is set (this is an error)
+1. The binding becomes immutable upon assignment of a value (any attempt to change the value is an error)
+
+The following languages support creating immutable bindings in this way.
+
+### Rust
+
+Rust allows the declaration of immutable bindings through the use of the `let` keyword. The following example comes from the [Rust Book](https://doc.rust-lang.org/rust-by-example/variable_bindings/declare.html):
+
+```rs
+fn main() {
+    // Declare a variable binding
+    let a_binding;
+
+    {
+        let x = 2;
+
+        // Initialize the binding
+        a_binding = x * x;
+    }
+
+    println!("a binding: {}", a_binding);
+
+    let another_binding;
+
+    // Error! Use of uninitialized binding
+    println!("another binding: {}", another_binding);
+    // FIXME ^ Comment out this line
+
+    another_binding = 1;
+
+    println!("another binding: {}", another_binding);
+}
+```
+
+### Swift
+
+Swift uses an immutable `let` declaration for defining constants. Here's an example from the [Swift Book](https://docs.swift.org/swift-book/documentation/the-swift-programming-language/thebasics/#Constants-and-Variables):
+
+```swift
+var environment = "development"
+let maximumNumberOfLoginAttempts: Int
+// maximumNumberOfLoginAttempts has no value yet.
+
+
+if environment == "development" {
+    maximumNumberOfLoginAttempts = 100
+} else {
+    maximumNumberOfLoginAttempts = 10
+}
+// Now maximumNumberOfLoginAttempts has a value, and can be read.
+```
 
 
 ## Maintain your proposal repo

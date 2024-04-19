@@ -4,36 +4,73 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.4/styles/github.min.css">
 <script src="./spec.js"></script>
 <pre class="metadata">
-title: Proposal Title Goes Here
+title: Write-Once `const` Declarations
 stage: -1
-contributors: Your Name(s) Here
+contributors: Nicholas C. Zakas
 </pre>
 
-<emu-clause id="sec-demo-clause">
-  <h1>This is an emu-clause</h1>
-  <p>This is an algorithm:</p>
-  <emu-alg>
-    1. Let _proposal_ be *undefined*.
-    1. If IsAccepted(_proposal_) is *true*, then
-      1. Let _stage_ be *0*<sub>ℤ</sub>.
-    1. Else,
-      1. Let _stage_ be *-1*<sub>ℤ</sub>.
-    1. Return ? ToString(_stage_).
-  </emu-alg>
+<emu-clause id="sec-let-and-const-declarations-static-semantics-early-errors">
+  <h1>Static Semantics: Early Errors</h1>
+  <emu-grammar>LexicalDeclaration : LetOrConst BindingList `;`</emu-grammar>
+  <ul>
+    <li>
+      It is a Syntax Error if the BoundNames of |BindingList| contains *"let"*.
+    </li>
+    <li>
+      It is a Syntax Error if the BoundNames of |BindingList| contains any duplicate entries.
+    </li>
+  </ul>
+  <emu-grammar>LexicalBinding : BindingIdentifier Initializer?</emu-grammar>
+  <del>
+  <ul>
+    <li>
+      It is a Syntax Error if |Initializer| is not present and IsConstantDeclaration of the |LexicalDeclaration| containing this |LexicalBinding| is *true*.
+    </li>
+  </ul>
+  </del>
 </emu-clause>
 
-<emu-clause id="sec-is-accepted" type="abstract operation">
-  <h1>
-      IsAccepted (
-        _proposal_: an ECMAScript language value
-      ): a Boolean
-  </h1>
-  <dl class="header">
-    <dt>description</dt>
-    <dd>Tells you if the proposal was accepted</dd>
-  </dl>
+<emu-clause id="sec-let-and-const-declarations-runtime-semantics-evaluation" type="sdo">
+  <h1>Runtime Semantics: Evaluation</h1>
+  <emu-grammar>LexicalDeclaration : LetOrConst BindingList `;`</emu-grammar>
   <emu-alg>
-    1. If _proposal_ is not a String, or is not accepted, return *false*.
-    1. Return *true*.
+    1. Perform ? Evaluation of |BindingList|.
+    1. Return ~empty~.
   </emu-alg>
+  <emu-grammar>BindingList : BindingList `,` LexicalBinding</emu-grammar>
+  <emu-alg>
+    1. Perform ? Evaluation of |BindingList|.
+    1. Return ? Evaluation of |LexicalBinding|.
+  </emu-alg>
+  <emu-grammar>LexicalBinding : BindingIdentifier</emu-grammar>
+  <emu-alg>
+    1. Let _lhs_ be ! ResolveBinding(StringValue of |BindingIdentifier|).
+    1. Perform ! InitializeReferencedBinding(_lhs_, *undefined*).
+    1. Return ~empty~.
+  </emu-alg>
+  <del>
+  <emu-note>
+    <p>A static semantics rule ensures that this form of |LexicalBinding| never occurs in a `const` declaration.</p>
+  </emu-note>
+  </del>
+  <emu-grammar>LexicalBinding : BindingIdentifier Initializer</emu-grammar>
+  <emu-alg>
+    1. Let _bindingId_ be StringValue of |BindingIdentifier|.
+    1. Let _lhs_ be ! ResolveBinding(_bindingId_).
+    1. If IsAnonymousFunctionDefinition(|Initializer|) is *true*, then
+      1. Let _value_ be ? NamedEvaluation of |Initializer| with argument _bindingId_.
+    1. Else,
+      1. Let _rhs_ be ? Evaluation of |Initializer|.
+      1. Let _value_ be ? GetValue(_rhs_).
+    1. Perform ! InitializeReferencedBinding(_lhs_, _value_).
+    1. Return ~empty~.
+  </emu-alg>
+  <emu-grammar>LexicalBinding : BindingPattern Initializer</emu-grammar>
+  <emu-alg>
+    1. Let _rhs_ be ? Evaluation of |Initializer|.
+    1. Let _value_ be ? GetValue(_rhs_).
+    1. Let _env_ be the running execution context's LexicalEnvironment.
+    1. Return ? BindingInitialization of |BindingPattern| with arguments _value_ and _env_.
+  </emu-alg>
+</emu-clause>
 </emu-clause>

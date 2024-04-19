@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "template-for-proposals",
+  "name": "proposal-write-once-const",
   "description": "A repository template for ECMAScript proposals.",
   "scripts": {
     "start": "npm run build-loose -- --watch",
@@ -14,8 +14,8 @@
   },
   "license": "MIT",
   "devDependencies": {
-    "@tc39/ecma262-biblio": "^2.1.2571",
-    "ecmarkup": "^17.0.0"
+    "@tc39/ecma262-biblio": "2.1.2719",
+    "ecmarkup": "^18.3.1"
   },
   "engines": {
     "node": ">= 12"
