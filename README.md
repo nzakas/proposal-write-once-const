@@ -33,7 +33,9 @@ const value = someCondition
   : 3;
 ```
 
-While some might argue that this solves the problem, it is debatable how readable this code is. 
+While some might argue that this solves the problem, it is debatable how readable this code is.
+
+### Assigning to Multiple Bindings
 
 The problem becomes more apparent when you need to set multiple binding values using the same conditions, as in this example:
 
@@ -64,6 +66,35 @@ const  { value1, value2 } = someCondition
 
 This example further obfuscates the actual logic, making it more difficult to understand the purpose of the code all in the service of creating an immutable binding.
 
+### `try-catch`-initialized Bindings
+
+In some cases, you may want to initialize a binding inside of a `try-catch` but allow that binding to be accessed outside of the `try-catch`. For example:
+
+```js
+async function doSomething() {
+
+  let result;
+
+  try {
+      result = await someOperationThatMightFail();
+  } catch (error) {
+    
+      // handle error and...
+      return;
+  }
+
+  doSomethingWith(result);
+}
+```
+
+Here, the `result` binding needs to be defined using `let` even though it is only ever read after being set.
+
+Some real world examples of this:
+
+* **Vite:** [Calculating cached meta data](https://github.com/vitejs/vite/blob/69773520f214027070b0ff1a3344394f37ef19f8/packages/vite/src/node/optimizer/index.ts#L355-L377)
+* **Vite:** [`init()`](https://github.com/vitejs/vite/blob/69773520f214027070b0ff1a3344394f37ef19f8/packages/create-vite/src/index.ts#L258C7-L366)
+* **node-pg-migrate:** [tsconfig calculation](https://github.com/salsita/node-pg-migrate/blob/fde10af20cdaf822fc9de49c71c9124f09fd6b71/bin/node-pg-migrate.ts#L253-L282)
+
 ## Proposal
 
 We propose that `const` declarations no longer require initialization. Specifically:
@@ -72,6 +103,7 @@ We propose that `const` declarations no longer require initialization. Specifica
 1. Attempting to read an uninitialized `const` binding before its value is set causes `ReferenceError: Cannot access 'name' before initialization.`. (Differs from `let`, which allows you to check the value before initialization.)
 1. An uninitialized `const` binding may have its value set exactly once.
 1. Attempting to set the value of an uninitialized `const` binding more than once causes the same `TypeError: Assignment to constant variable.` as assigning to any other `const` binding.
+1. Using `typeof` on an uninitialized `const` binding returns `"undefined"`
 
 For example:
 
@@ -89,6 +121,7 @@ if (someCondition) {
 value = 4;    // TypeError: Assignment to constant variable.
 
 const value2;
+console.log(typeof value2);   // "undefined"
 console.log(value2);  // ReferenceError: Cannot access 'value2' before initialization.
 ```
 
@@ -165,18 +198,11 @@ System.out.println(isEven); // compile-error because the variable was not assign
 
 Java also checks code paths at compile-time to ensure that a blank final's value cannot possibly be set more than once.
 
-## Real-World Examples
+## Frequently Asked Questions
 
-The following is a collection of examples from public source code where at write-once `const` could be used:
+**Why throw an error when the uninitialized binding is read?**
 
-### Vite
-
-* [Calculating cached meta data](https://github.com/vitejs/vite/blob/69773520f214027070b0ff1a3344394f37ef19f8/packages/vite/src/node/optimizer/index.ts#L355-L377)
-* [`init()`](https://github.com/vitejs/vite/blob/69773520f214027070b0ff1a3344394f37ef19f8/packages/create-vite/src/index.ts#L258C7-L366)
-
-### node-pg-migrate
-
-* [tsconfig calculation](https://github.com/salsita/node-pg-migrate/blob/fde10af20cdaf822fc9de49c71c9124f09fd6b71/bin/node-pg-migrate.ts#L253-L282)
+This seems to be the convention in other languages with similar features. Another option is to treat the binding just like a `let` binding that hasn't been initialized, so that people can test to see if it's equal to `undefined`. However, I believe the use of `typeof` is a better option for that use case.
 
 ## Maintain your proposal repo
 
