@@ -23,6 +23,47 @@ if (someCondition) {
 }
 ```
 
+This can be rewritten with a nested ternary, like this:
+
+```js
+const value = someCondition
+  ? 1
+  : otherCondition
+  ? 2
+  : 3;
+```
+
+While some might argue that this solves the problem, it is debatable how readable this code is. 
+
+The problem becomes more apparent when you need to set multiple binding values using the same conditions, as in this example:
+
+```js
+let value1, value2;
+
+if (someCondition) {
+  value1 = 1;
+  value2 = 5;
+} else if (someOtherCondition) {
+  value1 = 2;
+  value2 = 10;
+} else {
+  value1 = 3;
+  value2 = 15;
+}
+```
+
+In this case, you have no option to use nested ternaries without turning to destructuring and temporary object creation, such as:
+
+```js
+const  { value1, value2 } = someCondition
+  ? { value1: 1, value2: 5 }
+  : someOtherCondition
+  ? { value1: 2, value2: 10 }
+  : { value1: 3, value2: 15 };
+```
+
+This example further obfuscates the actual logic, making it more difficult to understand the purpose of the code all in the service of creating an immutable binding.
+
 ## Proposal
 
 We propose that `const` declarations no longer require initialization. Specifically:
@@ -51,7 +92,7 @@ const value2;
 console.log(value2);  // ReferenceError: Cannot access 'value2' before initialization.
 ```
 
-## Other Languages
+## Similar Immutable Bindings in Other Languages
 
 Other languages supporting write-once immutable bindings typically have the following behavior:
 
@@ -108,6 +149,21 @@ if environment == "development" {
 // Now maximumNumberOfLoginAttempts has a value, and can be read.
 ```
 
+### Java
+
+Java has a similar feature in the form of blank finals. A blank final uses the `final` keyword to indicate that the value of a binding must not change. That binding need not be initialized at declaration and cannot be changed once a value is set. Here's an example from [Wikipedia](https://en.wikipedia.org/wiki/Final_%28Java%29#Blank_final):
+
+```java
+final boolean isEven;
+
+if (number % 2 == 0) {
+  isEven = true;
+}
+
+System.out.println(isEven); // compile-error because the variable was not assigned in the else-case.
+```
+
+Java also checks code paths at compile-time to ensure that a blank final's value cannot possibly be set more than once.
 
 ## Maintain your proposal repo
 
