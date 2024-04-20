@@ -165,6 +165,19 @@ System.out.println(isEven); // compile-error because the variable was not assign
 
 Java also checks code paths at compile-time to ensure that a blank final's value cannot possibly be set more than once.
 
+## Real-World Examples
+
+The following is a collection of examples from public source code where at write-once `const` could be used:
+
+### Vite
+
+* [Calculating cached meta data](https://github.com/vitejs/vite/blob/69773520f214027070b0ff1a3344394f37ef19f8/packages/vite/src/node/optimizer/index.ts#L355-L377)
+* [`init()`](https://github.com/vitejs/vite/blob/69773520f214027070b0ff1a3344394f37ef19f8/packages/create-vite/src/index.ts#L258C7-L366)
+
+### node-pg-migrate
+
+* [tsconfig calculation](https://github.com/salsita/node-pg-migrate/blob/fde10af20cdaf822fc9de49c71c9124f09fd6b71/bin/node-pg-migrate.ts#L253-L282)
+
 ## Maintain your proposal repo
 
   1. Make your changes to `spec.emu` (ecmarkup uses HTML syntax, but is not HTML, so I strongly suggest not naming it “.html”)
