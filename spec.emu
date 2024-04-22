@@ -21,13 +21,13 @@ contributors: Nicholas C. Zakas
     </li>
   </ul>
   <emu-grammar>LexicalBinding : BindingIdentifier Initializer?</emu-grammar>
-  <del>
   <ul>
+  <del>
     <li>
       It is a Syntax Error if |Initializer| is not present and IsConstantDeclaration of the |LexicalDeclaration| containing this |LexicalBinding| is *true*.
     </li>
-  </ul>
   </del>
+  </ul>
 </emu-clause>
 
 <emu-clause id="sec-let-and-const-declarations-runtime-semantics-evaluation" type="sdo">
@@ -72,5 +72,4 @@ contributors: Nicholas C. Zakas
     1. Let _env_ be the running execution context's LexicalEnvironment.
     1. Return ? BindingInitialization of |BindingPattern| with arguments _value_ and _env_.
   </emu-alg>
-</emu-clause>
 </emu-clause>
