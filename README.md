@@ -9,7 +9,11 @@ or browse the [source](https://github.com/nzakas/proposal-write-once-const/blob/
 
 ## Motivation
 
-In certain situations, a constant binding's value may not be calculable at the time of declaration, leaving developers to use `let` even though the binding's value will never change once set. Using `let` on bindings that should be immutable can lead to errors. This often happens when the value of a binding needs more than two conditions to be evaluated in order to determine the correct value to use. For example:
+In certain situations, a constant binding's value may not be calculable at the time of declaration, leaving developers to use `let` even though the binding's value will never change once set. Using `let` on bindings that should be immutable can lead to errors. 
+
+### Use Case #1: Multiple conditions to calculate a value
+
+This often happens when the value of a binding needs more than two conditions to be evaluated in order to determine the correct value to use. For example:
 
 ```js
 let value;
@@ -35,7 +39,7 @@ const value = someCondition
 
 While some might argue that this solves the problem, it is debatable how readable this code is.
 
-### Assigning to Multiple Bindings
+### Use Case #2: Assigning to Multiple Bindings
 
 The problem becomes more apparent when you need to set multiple binding values using the same conditions, as in this example:
 
@@ -66,7 +70,7 @@ const  { value1, value2 } = someCondition
 
 This example further obfuscates the actual logic, making it more difficult to understand the purpose of the code all in the service of creating an immutable binding.
 
-### `try-catch`-initialized Bindings
+### Use Case #3: `try-catch`-initialized Bindings
 
 In some cases, you may want to initialize a binding inside of a `try-catch` but allow that binding to be accessed outside of the `try-catch`. For example:
 
@@ -198,11 +202,194 @@ System.out.println(isEven); // compile-error because the variable was not assign
 
 Java also checks code paths at compile-time to ensure that a blank final's value cannot possibly be set more than once.
 
+## Comparison to Various Expression-Based Solutions
+
+One of the early pieces of feedback was, "don't expression statements solve these use cases better?" In some cases that answer is yes, but I don't think that necessarily means that write-once `const` can't be a part of toolkit for developers to address these problems.
+
+### Use Case #1: Multiple conditions to calculate a value
+
+Here is the approach with write-once `const`:
+
+```js
+const value;
+
+if (someCondition) {
+  value = 1;
+} else if (someOtherCondition) {
+  value = 2;
+} else {
+  value = 3;
+}
+```
+
+Here is the approach with an imaginary `if` expression:
+
+```js
+const value = if (someCondition) {
+  1;
+} else if (otherCondition) {
+  2;
+} else {
+  3;
+}
+```
+
+Here is an approach with a proposed `do` expression:
+
+```js
+const value = do {
+  if (someCondition) {
+    1;
+  } else if (otherCondition) {
+    2;
+  } else {
+    3;
+  }
+}
+```
+
+While `if` and `do` expressions would solve this problem, there is room to debate which option is more readable.
+
+If JavaScript ends up with a Rust-style `match` expression, then I concede that is the best solution for this use case:
+
+```js
+const value = match {
+  when someCondition: 1;
+  when otherCondition: 2;
+  default: 3;
+}
+```
+
+### Use Case #2: Assigning to Multiple Bindings
+
+Here is the approach with write-once `const`:
+
+```js
+const value1, value2;
+
+if (someCondition) {
+  value1 = 1;
+  value2 = 5;
+} else if (someOtherCondition) {
+  value1 = 2;
+  value2 = 10;
+} else {
+  value1 = 3;
+  value2 = 15;
+}
+```
+
+Here is the approach with an imaginary `if` expression:
+
+```js
+const { value1, value2 } = if (someCondition) {
+  ({ value1: 1, value2: 5 });
+} else if (someOtherCondition) {
+  ({ value1: 2, value2: 10 });
+} else {
+  ({ value1: 3, value2: 15 });
+}
+```
+
+Here is an approach with a proposed `do` expression:
+
+```js
+const { value1, value2 } = do {
+  if (someCondition) {
+    ({ value1: 1, value2: 5 });
+  } else if (someOtherCondition) {
+    ({ value1: 2, value2: 10 });
+  } else {
+    ({ value1: 3, value2: 15 });
+  }
+}
+```
+
+The advantage of write-once `const` in this scenario is the avoidance of creating temporary objects in order to initialize multiple variables.
+
+### Use Case #3: `try-catch`-initialized Bindings
+
+Here is the approach with write-once `const`:
+
+```js
+async function doSomething() {
+
+  const result;
+
+  try {
+      result = await someOperationThatMightFail();
+  } catch (error) {
+    
+      // handle error and...
+      return;
+  }
+
+  doSomethingWith(result);
+}
+```
+
+Here is the approach with an imaginary `try` expression:
+
+```js
+async function doSomething() {
+
+  const result = try {
+      await someOperationThatMightFail();
+  } catch (error) {
+    
+      // handle error and...
+      return;
+  }
+
+  doSomethingWith(result);
+}
+```
+
+Here is an approach with a proposed `do` expression:
+
+```js
+async function doSomething() {
+
+  const result = do {
+    try {
+      await someOperationThatMightFail();
+    } catch (error) {
+    
+      // handle error and...
+      return;
+    }
+  }
+
+  doSomethingWith(result);
+}
+```
+
+For this use case, I think the `try` expression is what I'd prefer as a developer overall as it has the clearest indication of what is happening. I'd put write-once `const` in second place in this list.
+
 ## Frequently Asked Questions
 
 **Why throw an error when the uninitialized binding is read?**
 
-This seems to be the convention in other languages with similar features. Another option is to treat the binding just like a `let` binding that hasn't been initialized, so that people can test to see if it's equal to `undefined`. However, I believe the use of `typeof` is a better option for that use case.
+There are two primary reasons:
+
+1. This behavior is aligned with how uninitialized lexical bindings already work in JavaScript. 
+1. This is how write-once bindings are implemented in Rust, Swift, and Java. 
+
+However, I have no particularly affinity for this behavior other than consistency with existing behavior.
+
+(Another option would be to treat an uninitialized `const` binding the same as an uninitialized `let` binding, in which the value is treated as `undefined` in all respects and does not throw an error when the value is ready before initialization.)
+
+**Why propose this when people seem to be clamoring for expression statements?**
+
+Write-once `const` is significally smaller in scope to solve similar problems. My hope is that, if accepted, this proposal could move more quickly through to acceptance. For reference:
+
+* [`do` Expressions](https://github.com/tc39/proposal-do-expressions) (stage 1) were first proposed in 2018 and hasn't had an update in three years.
+* [Pattern Matching](https://github.com/tc39/proposal-pattern-matching) (stage 1) was first proposed in 2020 and last presented in 2022.
+
+Plus, Rust and Swift support both write-once bindings and `if`, `switch`, etc. exprssions -- it seems that there's plenty of room for both solutions in a language.
+
+## Related Proposals
+
 
 ## Maintain your proposal repo
 
