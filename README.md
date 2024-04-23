@@ -1,6 +1,7 @@
 # Write-Once `const` Declarations
 
 Author: Nicholas C. Zakas
+Stage: -1 (not yet submitted)
 
 This proposal seeks to allow `const` declarations to be uninitialized and later written to just once.
 
@@ -101,7 +102,7 @@ Some real world examples of this:
 
 ## Proposal
 
-We propose that `const` declarations no longer require initialization. Specifically:
+I propose that `const` declarations no longer require initialization. Specifically:
 
 1. An uninitialized `const` declaration is no longer a syntax error.
 1. Attempting to read an uninitialized `const` binding before its value is set causes `ReferenceError: Cannot access 'name' before initialization.`. (Differs from `let`, which allows you to check the value before initialization.)
