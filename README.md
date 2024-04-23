@@ -369,7 +369,7 @@ For this use case, I think the `try` expression is what I'd prefer as a develope
 
 ## Frequently Asked Questions
 
-**Why throw an error when the uninitialized binding is read?**
+### Why throw an error when the uninitialized binding is read?
 
 There are two primary reasons:
 
@@ -380,7 +380,7 @@ However, I have no particularly affinity for this behavior other than consistenc
 
 (Another option would be to treat an uninitialized `const` binding the same as an uninitialized `let` binding, in which the value is treated as `undefined` in all respects and does not throw an error when the value is ready before initialization.)
 
-**Why propose this when people seem to be clamoring for expression statements?**
+### Why propose this when people seem to be clamoring for expression statements?
 
 Write-once `const` is significally smaller in scope to solve similar problems. My hope is that, if accepted, this proposal could move more quickly through to acceptance. For reference:
 
@@ -389,8 +389,9 @@ Write-once `const` is significally smaller in scope to solve similar problems. M
 
 Plus, Rust and Swift support both write-once bindings and `if`, `switch`, etc. exprssions -- it seems that there's plenty of room for both solutions in a language.
 
-## Related Proposals
+## Why didn't you show using functions to address these use cases?
 
+All of the use cases can definitely be rewritten to use functions that encapsulate the logic, however, that's not what developers are actually doing. They're using `let` because they can't use `const`, and they're not wanting to extract that logic outside of the current function to do so.
 
 ## Maintain your proposal repo
 
