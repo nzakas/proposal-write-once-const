@@ -71,6 +71,12 @@ const  { value1, value2 } = someCondition
 
 This example further obfuscates the actual logic, making it more difficult to understand the purpose of the code all in the service of creating an immutable binding.
 
+Some real world examples of this:
+
+* **Faker:** [`month()`](https://github.com/faker-js/faker/blob/16ba43a6a4d1c93ac588c6b4c20b8c2a40213bdb/src/modules/date/index.ts#L623C9-L633)
+* **Faker:** [`fakeEval()`](https://github.com/faker-js/faker/blob/16ba43a6a4d1c93ac588c6b4c20b8c2a40213bdb/src/modules/helpers/eval.ts#L82C9-L89)
+* **Faker:** [`networkInterface()`](https://github.com/faker-js/faker/blob/16ba43a6a4d1c93ac588c6b4c20b8c2a40213bdb/src/modules/system/index.ts#L265C9-L295)
+
 ### Use Case #3: `try-catch`-initialized Bindings
 
 In some cases, you may want to initialize a binding inside of a `try-catch` but allow that binding to be accessed outside of the `try-catch`. For example:
