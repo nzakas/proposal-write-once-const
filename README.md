@@ -111,7 +111,7 @@ Some real world examples of this:
 I propose that `const` declarations no longer require initialization. Specifically:
 
 1. An uninitialized `const` declaration is no longer a syntax error.
-1. Attempting to read an uninitialized `const` binding before its value is set causes `ReferenceError: Cannot access 'name' before initialization.`. (Differs from `let`, which allows you to check the value before initialization.)
+1. Attempting to read an uninitialized `const` binding before its value is returns `undefined`.
 1. An uninitialized `const` binding may have its value set exactly once.
 1. Attempting to set the value of an uninitialized `const` binding more than once causes the same `TypeError: Assignment to constant variable.` as assigning to any other `const` binding.
 1. Using `typeof` on an uninitialized `const` binding returns `"undefined"`
@@ -133,10 +133,10 @@ value = 4;    // TypeError: Assignment to constant variable.
 
 const value2;
 console.log(typeof value2);   // "undefined"
-console.log(value2);  // ReferenceError: Cannot access 'value2' before initialization.
+console.log(value2);  // undefined
 ```
 
-## Similar Immutable Bindings in Other Languages
+## Prior Art
 
 Other languages supporting write-once immutable bindings typically have the following behavior:
 
@@ -375,16 +375,9 @@ For this use case, I think the `try` expression is what I'd prefer as a develope
 
 ## Frequently Asked Questions
 
-### Why throw an error when the uninitialized binding is read?
+### Why not throw an error when the uninitialized binding is read?
 
-There are two primary reasons:
-
-1. This behavior is aligned with how uninitialized lexical bindings already work in JavaScript. 
-1. This is how write-once bindings are implemented in Rust, Swift, and Java. 
-
-However, I have no particularly affinity for this behavior other than consistency with existing behavior.
-
-(Another option would be to treat an uninitialized `const` binding the same as an uninitialized `let` binding, in which the value is treated as `undefined` in all respects and does not throw an error when the value is ready before initialization.)
+The first version of this proposal threw an error when an uninitialized binding was read in order to match the TDZ behavior of `const` and `let` as originally defined. Since that time, I've received feedback that the TDZ behavior will likely be removed from the language and so it will no longer make sense to throw an error for an uninitialized write-once `const`.
 
 ### Why propose this when people seem to be clamoring for expression statements?
 
